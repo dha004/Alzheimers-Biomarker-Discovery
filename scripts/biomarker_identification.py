@@ -14,6 +14,11 @@ conditions = ["AD" if "AD" in col else "Healthy" for col in df.columns[1:]]
 # Convert to Pandas Series
 y = pd.Series(conditions, name="condition", index=df.columns[1:])  # Index matches sample names
 
+###
+#if "!Sample_title" in df.columns:
+    #df.rename(columns={"!Sample_title": "Gene_ID"}, inplace=True)
+
+
 # Transpose X so that rows are samples and columns are genes
 X = df.set_index("Gene_ID").T  # Transpose and set index to match y
 
