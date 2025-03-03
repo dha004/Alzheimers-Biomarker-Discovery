@@ -40,7 +40,7 @@ X, y = X.loc[valid_indices], y.loc[valid_indices]  # Keep only valid samples
 
 # Drop genes (columns) with more than 50% missing values
 X = X.dropna(thresh=int(0.5 * len(X)), axis=1)
-print(f"📉 Filtered genes: {X.shape[1]} remaining")
+print(f"Filtered genes: {X.shape[1]} remaining")
 
 # Ensure enough samples exist per condition before applying t-test
 min_sample_size = 5  # Minimum AD & Healthy samples needed per gene
@@ -49,7 +49,7 @@ valid_genes = [
     if (y[y == "AD"].index.isin(X[gene].dropna().index).sum() >= min_sample_size) and
        (y[y == "Healthy"].index.isin(X[gene].dropna().index).sum() >= min_sample_size)
 ]
-print(f"🚀 Running t-tests on {len(valid_genes)} valid genes...")
+print(f"Running t-tests on {len(valid_genes)} valid genes...")
 
 # Perform t-test on valid genes
 p_values = {
@@ -63,10 +63,10 @@ p_values = {
 
 # Select significant genes (p < 0.05)
 significant_genes = [gene for gene, p in p_values.items() if p < 0.05]
-print(f"✅ Significant genes found: {len(significant_genes)}")
+print(f"Significant genes found: {len(significant_genes)}")
 
 # Train Random Forest to find top biomarkers
-print(f"🌲 Training Random Forest on {len(significant_genes)} significant genes...")
+print(f"Training Random Forest on {len(significant_genes)} significant genes...")
 rf = RandomForestClassifier(n_estimators=100, random_state=42)
 rf.fit(X[significant_genes], y)
 
@@ -77,7 +77,7 @@ top_genes = feature_importance.nlargest(20).index  # Select top 20 biomarkers
 # Save selected biomarkers
 biomarkers = list(set(significant_genes) & set(top_genes))
 pd.DataFrame(biomarkers, columns=["Gene_ID"]).to_csv("data/biomarkers.csv", index=False)
-print(f"✅ Identified {len(biomarkers)} biomarkers. Saving...")
+print(f"Identified {len(biomarkers)} biomarkers. Saving...")
 
 # PCA for visualization
 pca = PCA(n_components=2)
@@ -89,6 +89,6 @@ plt.title("PCA of Gene Expression Data")
 plt.show()
 
 end_time = time.time()
-print(f"⏳ Total runtime: {end_time - start_time:.2f} seconds")
+print(f"Total runtime: {end_time - start_time:.2f} seconds")
 
-print(f"✅ Biomarker identification complete. {len(biomarkers)} biomarkers saved.")
+print(f"Biomarker identification complete. {len(biomarkers)} biomarkers saved.")

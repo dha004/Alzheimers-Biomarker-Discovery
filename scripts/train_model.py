@@ -38,7 +38,7 @@ X, y = X.align(y, axis=0, join="inner")
 y_pred = rf.predict(X)
 
 # Print Classification Report
-print("✅ Classification Report:")
+print("Classification Report:")
 print(classification_report(y, y_pred))
 
 # Confusion Matrix
@@ -58,4 +58,4 @@ plt.xlabel("Feature Importance")
 plt.title("Top Biomarkers Identified by Model")
 plt.show()
 
-print("🔍 Analysis Complete. Check visualizations for details.")
+print("Analysis Complete. Check visualizations for details.")

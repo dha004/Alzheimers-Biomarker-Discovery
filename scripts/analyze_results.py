@@ -51,5 +51,5 @@ os.makedirs("models", exist_ok=True)
 joblib.dump(rf, "models/random_forest_model.pkl")
 
 # Print Model Performance
-print(f"✅ Model Accuracy: {accuracy_score(y_test, y_pred) * 100:.2f}%")
+print(f"Model Accuracy: {accuracy_score(y_test, y_pred) * 100:.2f}%")
 print(classification_report(y_test, y_pred))

@@ -24,7 +24,7 @@ def preprocess_data(input_filepath, output_filepath):
 
         # Find where the actual data starts
         data_start = next(i for i, line in enumerate(lines) if not line.startswith("!") and "GSM" in line)
-        logging.info(f"✅ Data starts at line {data_start + 1}")
+        logging.info(f"Data starts at line {data_start + 1}")
 
         # Read data with corrected headers
         df = pd.read_csv(input_filepath, sep="\t", skiprows=data_start, low_memory=False)
@@ -47,16 +47,16 @@ def preprocess_data(input_filepath, output_filepath):
         df.dropna(how="all", axis=0, inplace=True)
         df.dropna(how="all", axis=1, inplace=True)
 
-        logging.info("\n🔹 Dataset Info After Processing:")
+        logging.info("\nDataset Info After Processing:")
         logging.info(df.info())
         logging.info(df.head())
 
         # Save cleaned data
         df.to_csv(output_filepath, index=False)
-        logging.info(f"✅ Preprocessed data saved to {output_filepath}")
+        logging.info(f"Preprocessed data saved to {output_filepath}")
 
     except Exception as e:
-        logging.error(f"❌ Error processing data: {e}")
+        logging.error(f"Error processing data: {e}")
 
 if __name__ == "__main__":
     input_filepath = "data/GSE48350_series_matrix.txt"
