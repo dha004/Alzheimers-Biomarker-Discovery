@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from scipy.stats import ttest_ind
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.decomposition import PCA
