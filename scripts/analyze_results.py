@@ -12,42 +12,19 @@ if not os.path.exists(model_path):
 # Load Trained Model
 rf = joblib.load(model_path)
 
-# Load Processed Data & Biomarkers
-df = pd.read_csv("data/processed_data_fixed.csv", index_col=0)  # Ensure Gene_ID is index
+# Load Processed Data from Parquet
+df = pd.read_parquet("data/processed_data_transposed_with_condition.parquet")
+
+# Load Biomarkers
 biomarkers = pd.read_csv("data/biomarkers.csv")["Gene_ID"].tolist()
 
-
-# Load GSM ID to Condition Mapping
-def load_conditions():
-    try:
-        conditions = pd.read_csv("data/sample_conditions.csv", index_col=0)["Condition"].to_dict()
-        return conditions
-    except FileNotFoundError:
-        print("Warning: Condition file not found. Using hardcoded mapping.")
-        return {"GSM1176": "AD", "GSM300": "Healthy"}
-
-
-condition_mapping = load_conditions()
-
-
-def get_condition(gsm_id):
-    """Determine condition based on GSM ID prefix."""
-    for prefix, condition in condition_mapping.items():
-        if gsm_id.startswith(prefix):
-            return condition
-    return "Unknown"
-
-
-# Extract Sample IDs & Map Conditions
-sample_ids = df.columns  # GSM IDs
-y = pd.Series([get_condition(sid) for sid in sample_ids], name="condition", index=sample_ids)
+# Extract Features (X) and Labels (y)
+X = df.drop(columns=["Sample_ID", "Condition"])  # Drop non-feature columns
+y = df["Condition"]  # Use precomputed Condition column (0=Healthy, 1=AD)
 
 # Ensure Biomarkers Exist in Processed Data
-biomarkers = [gene for gene in biomarkers if gene in df.index]
-X = df.loc[biomarkers].T  # Transpose so samples are rows
-
-# Align X and y to Ensure Correct Sample Matching
-X, y = X.align(y, axis=0, join="inner")
+biomarkers = [gene for gene in biomarkers if gene in X.columns]
+X = X[biomarkers]  # Keep only selected biomarkers
 
 # Make Predictions
 y_pred = rf.predict(X)
@@ -56,18 +33,15 @@ y_pred = rf.predict(X)
 print("✅ Classification Report:")
 print(classification_report(y, y_pred))
 
-
 # Confusion Matrix
-def plot_confusion_matrix(y_true, y_pred, labels):
-    cm = confusion_matrix(y_true, y_pred, labels=labels)
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=labels)
+def plot_confusion_matrix(y_true, y_pred):
+    cm = confusion_matrix(y_true, y_pred, labels=[0, 1])  # Labels match Condition column
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["Healthy", "AD"])
     disp.plot(cmap="Blues")
     plt.title("Confusion Matrix")
     plt.show()
 
-
-plot_confusion_matrix(y, y_pred, labels=["Healthy", "AD"])
-
+plot_confusion_matrix(y, y_pred)
 
 # Feature Importance Visualization
 def plot_top_biomarkers(model, feature_names, top_n=20):
@@ -83,7 +57,6 @@ def plot_top_biomarkers(model, feature_names, top_n=20):
     plt.title(f"Top {top_n} Biomarkers Identified by Model")
     plt.gca().invert_yaxis()  # Highest importance on top
     plt.show()
-
 
 plot_top_biomarkers(rf, biomarkers, top_n=20)
 

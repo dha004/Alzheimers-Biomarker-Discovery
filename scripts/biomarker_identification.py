@@ -8,34 +8,16 @@ import time
 
 start_time = time.time()
 
-# Load processed data
-df = pd.read_csv("data/processed_data_fixed.csv", index_col=0)  # Ensure Gene_ID is index
+# Load processed data from Parquet
+df = pd.read_parquet("data/processed_data_transposed_with_condition.parquet")
 
-# Load GSM ID to condition mapping
-condition_mapping = {
-    "GSM1176": "AD",  # Example pattern
-    "GSM300": "Healthy"
-}
-
-def get_condition(gsm_id):
-    """Determine condition based on GSM ID prefix."""
-    for prefix, condition in condition_mapping.items():
-        if gsm_id.startswith(prefix):
-            return condition
-    return "Unknown"
-
-# Extract conditions for each sample
-sample_ids = df.columns  # GSM IDs
-y = pd.Series([get_condition(sid) for sid in sample_ids], name="condition", index=sample_ids)
+# Extract features (X) and labels (y)
+X = df.drop(columns=["Sample_ID", "Condition"])  # Drop non-feature columns
+y = df["Condition"]  # Use the precomputed Condition column (0=Healthy, 1=AD)
 
 # Debugging: Check condition distribution
-condition_counts = Counter(y.values)
+condition_counts = Counter(y)
 print("Condition Count:", condition_counts)
-
-# Remove "Unknown" samples
-valid_indices = y[y != "Unknown"].index
-X = df.T  # Transpose so samples are rows
-X, y = X.loc[valid_indices], y.loc[valid_indices]  # Keep only valid samples
 
 # Drop genes (columns) with more than 50% missing values
 X = X.dropna(thresh=int(0.5 * len(X)), axis=1)
@@ -45,16 +27,16 @@ print(f"Filtered genes: {X.shape[1]} remaining")
 min_sample_size = 5  # Minimum AD & Healthy samples needed per gene
 valid_genes = [
     gene for gene in X.columns
-    if (y[y == "AD"].index.isin(X[gene].dropna().index).sum() >= min_sample_size) and
-       (y[y == "Healthy"].index.isin(X[gene].dropna().index).sum() >= min_sample_size)
+    if (y[y == 1].index.isin(X[gene].dropna().index).sum() >= min_sample_size) and
+       (y[y == 0].index.isin(X[gene].dropna().index).sum() >= min_sample_size)
 ]
 print(f"Running t-tests on {len(valid_genes)} valid genes...")
 
 # Perform t-test on valid genes
 p_values = {
     gene: ttest_ind(
-        X.loc[y == "AD", gene].dropna(),
-        X.loc[y == "Healthy", gene].dropna(),
+        X.loc[y == 1, gene].dropna(),
+        X.loc[y == 0, gene].dropna(),
         nan_policy="omit"
     ).pvalue
     for gene in valid_genes
@@ -81,7 +63,7 @@ print(f"Identified {len(biomarkers)} biomarkers. Saving...")
 # PCA for visualization
 pca = PCA(n_components=2)
 X_pca = pca.fit_transform(X[top_genes])
-plt.scatter(X_pca[:, 0], X_pca[:, 1], c=(y == "AD").astype(int), cmap="coolwarm", alpha=0.7)
+plt.scatter(X_pca[:, 0], X_pca[:, 1], c=y, cmap="coolwarm", alpha=0.7)
 plt.xlabel("PC1")
 plt.ylabel("PC2")
 plt.title("PCA of Gene Expression Data")

@@ -12,6 +12,9 @@ def preprocess_data(input_filepath, output_filepath):
     - Ensures correct headers
     - Separates Gene_ID and ID_REF correctly
     - Drops unnecessary rows
+    - Transposes data so samples are rows and genes are columns
+    - Adds 'Condition' column (0 for Healthy, 1 for AD)
+    - Saves as Parquet for efficient storage
     """
     if not os.path.exists(input_filepath):
         logging.error(f"File not found: {input_filepath}")
@@ -47,19 +50,37 @@ def preprocess_data(input_filepath, output_filepath):
         df.dropna(how="all", axis=0, inplace=True)
         df.dropna(how="all", axis=1, inplace=True)
 
-        logging.info("\nDataset Info After Processing:")
-        logging.info(df.info())
-        logging.info(df.head())
+        # Transpose data so samples are rows and genes are columns
+        df.set_index("Gene_ID", inplace=True)  # Set Gene_ID as index before transposing
+        df_transposed = df.T  # Transpose the DataFrame
 
-        # Save cleaned data
-        df.to_csv(output_filepath, index=False)
-        logging.info(f"Preprocessed data saved to {output_filepath}")
+        # Reset index to ensure sample IDs are in a proper column
+        df_transposed.reset_index(inplace=True)
+        df_transposed.rename(columns={"index": "Sample_ID"}, inplace=True)  # Rename first column
+
+        # Add 'Condition' column (0 for Healthy, 1 for AD)
+        df_transposed["Condition"] = df_transposed["Sample_ID"].apply(lambda x: 0 if x.startswith("GSM300") else (1 if x.startswith("GSM117") else None))
+
+        # Drop rows where Condition is still None (if any invalid sample IDs exist)
+        df_transposed.dropna(subset=["Condition"], inplace=True)
+        df_transposed["Condition"] = df_transposed["Condition"].astype(int)  # Ensure it's an integer column
+
+        logging.info("\nDataset Info After Processing:")
+        logging.info(df_transposed.info())
+        logging.info(df_transposed.head())
+
+        # Save as CSV
+        df_transposed.to_csv("data/processed_data_transposed_with_condition.csv", index=False)
+
+        # Save transposed data as Parquet (efficient storage format)
+        df_transposed.to_parquet(output_filepath, index=False)
+        logging.info(f"Preprocessed, transposed, and labeled data saved to {output_filepath} in Parquet format")
 
     except Exception as e:
         logging.error(f"Error processing data: {e}")
 
 if __name__ == "__main__":
     input_filepath = "data/GSE48350_series_matrix.txt"
-    output_filepath = "data/processed_data_fixed.csv"
+    output_filepath = "data/processed_data_transposed_with_condition.parquet"
 
     preprocess_data(input_filepath, output_filepath)
