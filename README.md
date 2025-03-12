@@ -3,9 +3,9 @@ Alzheimer’s Disease is a neurodegenerative disorder that affects millions worl
 Current diagnosis methods rely on cognitive tests and brain imaging, which are expensive and often detect the disease too late.
 
 This project aims to: 
-✔️ Identify genetic biomarkers that distinguish AD patients from healthy individuals
-✔️ Train a machine learning model that can classify AD vs. Healthy based on gene expression
-✔️ Provide a reproducible pipeline that can be extended for biomarker discovery in other diseases
+✔Identify genetic biomarkers that distinguish AD patients from healthy individuals
+✔Train a machine learning model that can classify AD vs. Healthy based on gene expression
+✔Provide a reproducible pipeline that can be extended for biomarker discovery in other diseases
 
 By leveraging statistical analysis and Random Forest models, this tool helps researchers find potential early indicators of Alzheimer’s Disease.
 # Features
