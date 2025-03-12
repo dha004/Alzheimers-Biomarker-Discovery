@@ -9,7 +9,7 @@ import time
 start_time = time.time()
 
 # Load processed data from Parquet
-df = pd.read_parquet("data/processed_data_transposed_with_condition.parquet")
+df = pd.read_csv("data/processed_data_transposed_with_condition.csv")
 
 # Extract features (X) and labels (y)
 X = df.drop(columns=["Sample_ID", "Condition"])  # Drop non-feature columns
@@ -53,7 +53,7 @@ rf.fit(X[significant_genes], y)
 
 # Get top features based on importance
 feature_importance = pd.Series(rf.feature_importances_, index=significant_genes)
-top_genes = feature_importance.nlargest(20).index  # Select top 20 biomarkers
+top_genes = feature_importance.nlargest(200).index  # Select top 20 biomarkers
 
 # Save selected biomarkers
 biomarkers = list(set(significant_genes) & set(top_genes))

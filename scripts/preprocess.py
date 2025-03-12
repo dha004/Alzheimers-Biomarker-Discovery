@@ -14,7 +14,6 @@ def preprocess_data(input_filepath, output_filepath):
     - Drops unnecessary rows
     - Transposes data so samples are rows and genes are columns
     - Adds 'Condition' column (0 for Healthy, 1 for AD)
-    - Saves as Parquet for efficient storage
     """
     if not os.path.exists(input_filepath):
         logging.error(f"File not found: {input_filepath}")
@@ -42,6 +41,10 @@ def preprocess_data(input_filepath, output_filepath):
         # Remove rows where Gene_ID is empty or malformed
         df = df[df["Gene_ID"].notna() & df["Gene_ID"].str.match(r"^[a-zA-Z0-9_.-]+$")]
 
+        # Remove genes containing "AFFX"
+        df["Gene_ID"] = df["Gene_ID"].astype(str).str.strip()
+        df = df[~df["Gene_ID"].str.startswith("AFFX", na=False)]
+
         # Convert numeric columns
         for col in df.columns[1:]:
             df[col] = pd.to_numeric(df[col], errors='coerce')
@@ -49,6 +52,8 @@ def preprocess_data(input_filepath, output_filepath):
         # Remove empty rows and columns
         df.dropna(how="all", axis=0, inplace=True)
         df.dropna(how="all", axis=1, inplace=True)
+
+        df.to_csv("data/processed_data.csv", index=False)
 
         # Transpose data so samples are rows and genes are columns
         df.set_index("Gene_ID", inplace=True)  # Set Gene_ID as index before transposing
@@ -71,10 +76,7 @@ def preprocess_data(input_filepath, output_filepath):
 
         # Save as CSV
         df_transposed.to_csv("data/processed_data_transposed_with_condition.csv", index=False)
-
-        # Save transposed data as Parquet (efficient storage format)
-        df_transposed.to_parquet(output_filepath, index=False)
-        logging.info(f"Preprocessed, transposed, and labeled data saved to {output_filepath} in Parquet format")
+        print("Preprocess complete. Processed data transposed with conditions saved as csv.")
 
     except Exception as e:
         logging.error(f"Error processing data: {e}")
