@@ -10,14 +10,34 @@ A bioinformatics pipeline for identifying key biomarkers related to Alzheimer's 
 2. Set up a virtual environment
 3. Install dependencies
 # Dependencies
-- Python 3.13+
-- pandas
-- numpy
-- scikit-learn
-- scipy
-- matplotlib
-- imabalanced-learn
-- joblib
+- Python           3.13+
+- contourpy        1.3.1
+- cycler           0.12.1
+- Cython           3.0.12
+- fonttools        4.56.0
+- git-filter-repo  2.47.0
+- imbalanced-learn 0.13.0
+- imblearn         0.0
+- joblib           1.4.2
+- kiwisolver       1.4.8
+- matplotlib       3.10.1
+- numpy            2.2.3
+- packaging        24.2
+- pandas           2.2.3
+- pillow           11.1.0
+- pip              25.0.1
+- pyarrow          19.0.1
+- pyparsing        3.2.1
+- python-dateutil  2.9.0.post0
+- pytz             2025.1
+- scikit-learn     1.6.1
+- scipy            1.15.2
+- setuptools       75.8.2
+- six              1.17.0
+- sklearn-compat   0.1.3
+- threadpoolctl    3.5.0
+- tzdata           2025.1
+- wheel            0.45.1
 # References
 - Dataset: GSE48350 (NCBI GEO)
 - Machine Learning Model: Random Forest Classifier
