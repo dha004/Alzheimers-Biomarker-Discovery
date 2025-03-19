@@ -12,52 +12,56 @@ if not os.path.exists(model_path):
 # Load Trained Model
 rf = joblib.load(model_path)
 
-# Load Processed Data
-df = pd.read_csv("data/processed_data_transposed_with_condition.csv")
+# Load Test Set
+test_data_path = "data/test_set.pkl"
+if not os.path.exists(test_data_path):
+    raise FileNotFoundError("Test set not found. Ensure correct data processing.")
 
-# Load Biomarkers Used in Training
-biomarkers = pd.read_csv("data/biomarkers.csv")["Gene_ID"].tolist()
+X_test, y_test = joblib.load(test_data_path)
 
-# Ensure Biomarkers Match Model Features
-model_features = rf.feature_names_in_
-biomarkers = [gene for gene in model_features if gene in df.columns]  # Ensure correct feature set
+model_data = joblib.load("models/random_forest_model.pkl")
+rf = model_data["model"]
+feature_names = model_data["feature_names"]
 
-# Extract Features & Labels
-X = df[biomarkers]  # Use the exact features model was trained on
-y = df["Condition"]  # Labels (0 = Healthy, 1 = AD)
+# Ensure test set has the same features as the trained model
+X_test = X_test[feature_names]
 
-# Make Predictions
-y_pred = rf.predict(X)
+# Make predictions only on test data
+y_pred_test = rf.predict(X_test)
 
-# Print Classification Report
-print("\nClassification Report:")
-print(classification_report(y, y_pred))
+# Save Classification Report to File
+report_df = pd.DataFrame(classification_report(y_test, y_pred_test, output_dict=True)).transpose()
+report_df.to_csv("classification_report.csv", index=True)
+print("Classification report saved as classification_report.csv")
 
 # Confusion Matrix Visualization
 def plot_confusion_matrix(y_true, y_pred):
     cm = confusion_matrix(y_true, y_pred, labels=[0, 1])  # Labels match Condition column
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=["Healthy", "AD"])
+
+    plt.figure(figsize=(6, 4))
     disp.plot(cmap="Blues")
     plt.title("Confusion Matrix")
+    plt.savefig("confusion_matrix.png")
     plt.show()
+    print("Confusion matrix saved as confusion_matrix.png")
 
-plot_confusion_matrix(y, y_pred)
+# Call function with correct test set arguments
+plot_confusion_matrix(y_test, y_pred_test)
 
-# Feature Importance Visualization
-def plot_top_biomarkers(model, feature_names, top_n=20):
-    importances = model.feature_importances_
-    sorted_indices = importances.argsort()[::-1][:top_n]  # Get indices of top N features
-    top_features = [feature_names[i] for i in sorted_indices]
-    top_importances = importances[sorted_indices]
+# Load and visualize top 20 biomarkers from train_model.py (NOT recomputed)
+biomarker_file = "top_20_biomarkers.csv"
+if os.path.exists(biomarker_file):
+    top_20_genes = pd.read_csv(biomarker_file)
 
-    plt.figure(figsize=(12, 6))
-    plt.barh(range(len(top_importances)), top_importances, align="center")
-    plt.yticks(range(len(top_importances)), top_features)
+    # Display precomputed feature importance graph (no recomputation)
+    plt.figure(figsize=(10, 6))
+    plt.barh(top_20_genes["Gene"], top_20_genes["Importance"], color="skyblue")
     plt.xlabel("Feature Importance")
-    plt.title(f"Top {top_n} Biomarkers Identified by Model")
-    plt.gca().invert_yaxis()  # Highest importance on top
-    plt.show()
-
-plot_top_biomarkers(rf, biomarkers, top_n=20)
-
-print("Analysis Complete. Check visualizations for details.")
+    plt.ylabel("Gene")
+    plt.title("Top 20 Biomarkers (Loaded from train_model.py)")
+    plt.gca().invert_yaxis()
+    plt.show()  # Display the plot
+    print("Feature importance plot displayed.")
+else:
+    print("Warning: Top 20 biomarker file not found. Run train_model.py first.")
