@@ -1,12 +1,10 @@
 import joblib
-import numpy as np
-import pandas as pd
-import pickle
 import matplotlib.pyplot as plt
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
+import pandas as pd
 from imblearn.over_sampling import SMOTE
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report
+from sklearn.model_selection import train_test_split
 
 # Load Processed Data
 df = pd.read_csv("data/processed_data_transposed_with_condition.csv")
